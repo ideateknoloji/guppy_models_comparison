@@ -1,0 +1,228 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##FILTER=<ID=LowQual,Description="Low quality variant">
+##FILTER=<ID=RefCall,Description="Reference call">
+##INFO=<ID=P,Number=0,Type=Flag,Description="Result from pileup calling">
+##INFO=<ID=F,Number=0,Type=Flag,Description="Result from full-alignment calling">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Read depth for each allele">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Phred-scaled genotype likelihoods rounded to the closest integer">
+##FORMAT=<ID=AF,Number=1,Type=Float,Description="Estimated allele frequency in the range of [0,1]">
+##contig=<ID=chr1,length=249250621>
+##contig=<ID=chr2,length=243199373>
+##contig=<ID=chr3,length=198022430>
+##contig=<ID=chr4,length=191154276>
+##contig=<ID=chr5,length=180915260>
+##contig=<ID=chr6,length=171115067>
+##contig=<ID=chr7,length=159138663>
+##contig=<ID=chrX,length=155270560>
+##contig=<ID=chr8,length=146364022>
+##contig=<ID=chr9,length=141213431>
+##contig=<ID=chr10,length=135534747>
+##contig=<ID=chr11,length=135006516>
+##contig=<ID=chr12,length=133851895>
+##contig=<ID=chr13,length=115169878>
+##contig=<ID=chr14,length=107349540>
+##contig=<ID=chr15,length=102531392>
+##contig=<ID=chr16,length=90354753>
+##contig=<ID=chr17,length=81195210>
+##contig=<ID=chr18,length=78077248>
+##contig=<ID=chr20,length=63025520>
+##contig=<ID=chrY,length=59373566>
+##contig=<ID=chr19,length=59128983>
+##contig=<ID=chr22,length=51304566>
+##contig=<ID=chr21,length=48129895>
+##contig=<ID=chr6_ssto_hap7,length=4928567>
+##contig=<ID=chr6_mcf_hap5,length=4833398>
+##contig=<ID=chr6_cox_hap2,length=4795371>
+##contig=<ID=chr6_mann_hap4,length=4683263>
+##contig=<ID=chr6_apd_hap1,length=4622290>
+##contig=<ID=chr6_qbl_hap6,length=4611984>
+##contig=<ID=chr6_dbb_hap3,length=4610396>
+##contig=<ID=chr17_ctg5_hap1,length=1680828>
+##contig=<ID=chr4_ctg9_hap1,length=590426>
+##contig=<ID=chr1_gl000192_random,length=547496>
+##contig=<ID=chrUn_gl000225,length=211173>
+##contig=<ID=chr4_gl000194_random,length=191469>
+##contig=<ID=chr4_gl000193_random,length=189789>
+##contig=<ID=chr9_gl000200_random,length=187035>
+##contig=<ID=chrUn_gl000222,length=186861>
+##contig=<ID=chrUn_gl000212,length=186858>
+##contig=<ID=chr7_gl000195_random,length=182896>
+##contig=<ID=chrUn_gl000223,length=180455>
+##contig=<ID=chrUn_gl000224,length=179693>
+##contig=<ID=chrUn_gl000219,length=179198>
+##contig=<ID=chr17_gl000205_random,length=174588>
+##contig=<ID=chrUn_gl000215,length=172545>
+##contig=<ID=chrUn_gl000216,length=172294>
+##contig=<ID=chrUn_gl000217,length=172149>
+##contig=<ID=chr9_gl000199_random,length=169874>
+##contig=<ID=chrUn_gl000211,length=166566>
+##contig=<ID=chrUn_gl000213,length=164239>
+##contig=<ID=chrUn_gl000220,length=161802>
+##contig=<ID=chrUn_gl000218,length=161147>
+##contig=<ID=chr19_gl000209_random,length=159169>
+##contig=<ID=chrUn_gl000221,length=155397>
+##contig=<ID=chrUn_gl000214,length=137718>
+##contig=<ID=chrUn_gl000228,length=129120>
+##contig=<ID=chrUn_gl000227,length=128374>
+##contig=<ID=chr1_gl000191_random,length=106433>
+##contig=<ID=chr19_gl000208_random,length=92689>
+##contig=<ID=chr9_gl000198_random,length=90085>
+##contig=<ID=chr17_gl000204_random,length=81310>
+##contig=<ID=chrUn_gl000233,length=45941>
+##contig=<ID=chrUn_gl000237,length=45867>
+##contig=<ID=chrUn_gl000230,length=43691>
+##contig=<ID=chrUn_gl000242,length=43523>
+##contig=<ID=chrUn_gl000243,length=43341>
+##contig=<ID=chrUn_gl000241,length=42152>
+##contig=<ID=chrUn_gl000236,length=41934>
+##contig=<ID=chrUn_gl000240,length=41933>
+##contig=<ID=chr17_gl000206_random,length=41001>
+##contig=<ID=chrUn_gl000232,length=40652>
+##contig=<ID=chrUn_gl000234,length=40531>
+##contig=<ID=chr11_gl000202_random,length=40103>
+##contig=<ID=chrUn_gl000238,length=39939>
+##contig=<ID=chrUn_gl000244,length=39929>
+##contig=<ID=chrUn_gl000248,length=39786>
+##contig=<ID=chr8_gl000196_random,length=38914>
+##contig=<ID=chrUn_gl000249,length=38502>
+##contig=<ID=chrUn_gl000246,length=38154>
+##contig=<ID=chr17_gl000203_random,length=37498>
+##contig=<ID=chr8_gl000197_random,length=37175>
+##contig=<ID=chrUn_gl000245,length=36651>
+##contig=<ID=chrUn_gl000247,length=36422>
+##contig=<ID=chr9_gl000201_random,length=36148>
+##contig=<ID=chrUn_gl000235,length=34474>
+##contig=<ID=chrUn_gl000239,length=33824>
+##contig=<ID=chr21_gl000210_random,length=27682>
+##contig=<ID=chrUn_gl000231,length=27386>
+##contig=<ID=chrUn_gl000229,length=19913>
+##contig=<ID=chrM,length=16571>
+##contig=<ID=chrUn_gl000226,length=15008>
+##contig=<ID=chr18_gl000207_random,length=4262>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE
+chr1	26832441	.	CT	C	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr1	28465268	.	CA	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:1.0000
+chr1	36324043	.	ATATT	A	7.09	PASS	P	GT:GQ:DP:AF	1/1:7:2:1.0000
+chr1	49293667	.	T	TAC	0.55	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr1	82292122	.	C	CTGTT	10.02	PASS	F	GT:GQ:DP:AF	1/1:10:2:1.0000
+chr1	83979673	.	CATTTATTT	C	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr1	83984804	.	T	TTGTG	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr1	86487992	.	A	AACAG	8.08	PASS	F	GT:GQ:DP:AF	1/1:8:2:1.0000
+chr1	102908219	.	A	AC	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:1.0000
+chr1	103430143	.	G	GT	5.83	PASS	F	GT:GQ:DP:AF	1/1:5:2:1.0000
+chr1	111619690	.	ATATCCTTGT	A	11.73	PASS	F	GT:GQ:DP:AF	1/1:11:2:1.0000
+chr1	111622386	.	C	CAA	7.07	PASS	F	GT:GQ:DP:AF	1/1:7:2:1.0000
+chr1	150859922	.	TTTA	T	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr1	156118592	.	CT	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr1	192517795	.	T	TTGTTGTTGA	11.54	PASS	F	GT:GQ:DP:AF	1/1:11:2:1.0000
+chr1	230431592	.	TTAAG	T	6.97	PASS	P	GT:GQ:DP:AF	1/1:6:2:1.0000
+chr1	238381415	.	T	TTTA	0.51	LowQual	F	GT:GQ:DP:AF	1/1:0:2:1.0000
+chr2	111715522	.	CT	C	7.3	PASS	P	GT:GQ:DP:AF	1/1:7:3:1.0000
+chr2	180042165	.	T	TAC	8	PASS	P	GT:GQ:DP:AF	1/1:8:2:1.0000
+chr2	191546152	.	T	TAAATA	5.81	PASS	F	GT:GQ:DP:AF	1/1:5:2:1.0000
+chr2	229325854	.	G	GT	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr3	71277095	.	A	AG	10.2	PASS	F	GT:GQ:DP:AF	1/1:10:2:1.0000
+chr3	98861308	.	A	AC	4.13	PASS	F	GT:GQ:DP:AF	1/1:4:2:1.0000
+chr3	101495330	.	CA	C	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr3	124320562	.	AT	A	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:1.0000
+chr3	124324473	.	C	CACTGT	10.81	PASS	F	GT:GQ:DP:AF	1/1:10:2:1.0000
+chr3	124324901	.	AT	A	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:1.0000
+chr3	126916433	.	T	TTTC	9.62	PASS	P	GT:GQ:DP:AF	1/1:9:2:1.0000
+chr3	150248250	.	T	TATAC,TAC	0	LowQual	F	GT:GQ:DP:AF	1/2:0:2:1.0000
+chr4	43851474	.	A	AAATAAT	3.92	PASS	F	GT:GQ:DP:AF	1/1:3:2:0.5000
+chr4	59363665	.	T	TCACTG	7.57	PASS	F	GT:GQ:DP:AF	1/1:7:2:1.0000
+chr4	74747334	.	TATTAATA	T	7.06	PASS	P	GT:GQ:DP:AF	0/1:7:2:0.5000
+chr4	77696474	.	G	GGT,GGTGTGTGTGTGT	0	LowQual	F	GT:GQ:DP:AF	1/2:0:2:1.0000
+chr4	77696842	.	G	GTGTA	6.39	PASS	F	GT:GQ:DP:AF	0/1:6:2:0.5000
+chr4	120240802	.	C	CATAATAATA	3.47	PASS	F	GT:GQ:DP:AF	0/1:3:2:0.5000
+chr4	161622117	.	A	AAAT	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr5	29343720	.	A	AATGACACAC	8.49	PASS	F	GT:GQ:DP:AF	1/1:8:2:1.0000
+chr5	40045969	.	TACACACAC	T,TACAC	7.02	PASS	P	GT:GQ:DP:AF	1/2:7:2:1.0000
+chr5	113071969	.	A	ATGTGCAAGGT	9.65	PASS	F	GT:GQ:DP:AF	1/1:9:2:1.0000
+chr5	116427454	.	C	CTT	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr5	135453193	.	G	GCACA	2.21	PASS	F	GT:GQ:DP:AF	0/1:2:2:0.5000
+chr5	136469058	.	CA	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:3:0.6667
+chr5	136472081	.	C	CA	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr5	136474185	.	C	CAA	8.68	PASS	F	GT:GQ:DP:AF	1/1:8:2:1.0000
+chr5	157228514	.	C	CA	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr5	170929936	.	GTATA	G	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr6	72357414	.	A	AAC	7.6	PASS	P	GT:GQ:DP:AF	1/1:7:2:1.0000
+chr6	114787964	.	TCTC	T	1.85	LowQual	F	GT:GQ:DP:AF	1/1:1:2:1.0000
+chr6	143821996	.	T	TG	5.11	PASS	F	GT:GQ:DP:AF	1/1:5:2:1.0000
+chr6	166465899	.	C	CT	6.87	PASS	P	GT:GQ:DP:AF	1/1:6:2:1.0000
+chr7	5111123	.	G	GC	8.3	PASS	P	GT:GQ:DP:AF	1/1:8:2:1.0000
+chr7	29394556	.	T	TTTTATTTATTTA	0.78	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr7	81003274	.	AATAT	A,AATATAT	6.87	PASS	P	GT:GQ:DP:AF	1/2:6:2:1.0000
+chr7	82634395	.	C	CATT	1.61	LowQual	F	GT:GQ:DP:AF	1/1:1:2:0.5000
+chr7	109642769	.	ATGTG	A	0.89	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr7	116879624	.	TACACACAC	T	6.87	PASS	P	GT:GQ:DP:AF	1/1:6:2:1.0000
+chr7	135672710	.	CA	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:1.0000
+chr7	137300277	.	ATGTGTG	A,ATGTG	7.27	PASS	P	GT:GQ:DP:AF	1/2:7:2:1.0000
+chr7	137304765	.	G	GCACA	9.4	PASS	F	GT:GQ:DP:AF	1/1:9:2:1.0000
+chr8	423743	.	C	CTGTT	4.74	PASS	F	GT:GQ:DP:AF	1/1:4:2:1.0000
+chr8	52099278	.	A	ATG	7.16	PASS	P	GT:GQ:DP:AF	1/1:7:2:1.0000
+chr8	102624748	.	G	GATACATAC	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr8	116586968	.	C	CATAT	2.28	PASS	F	GT:GQ:DP:AF	1/1:2:2:0.5000
+chr8	140879007	.	CTGTG	C	2.96	PASS	F	GT:GQ:DP:AF	0/1:2:2:0.5000
+chr9	1655471	.	G	GTGTTTTT	9.87	PASS	F	GT:GQ:DP:AF	1/1:9:3:0.6667
+chr9	16801741	.	A	C,AAC	0	LowQual	F	GT:GQ:DP:AF	1/2:0:2:1.0000
+chr9	16805711	.	G	GCACACA	4.75	PASS	F	GT:GQ:DP:AF	1/1:4:2:0.5000
+chr9	28437547	.	GCACA	G,GCACACACA	0.95	LowQual	F	GT:GQ:DP:AF	1/2:0:2:1.0000
+chr9	103726805	.	T	TAGAAA	7.93	PASS	F	GT:GQ:DP:AF	1/1:7:2:1.0000
+chr9	126972494	.	C	CTCT	8.92	PASS	F	GT:GQ:DP:AF	1/1:8:2:1.0000
+chr10	13063705	.	A	AG	0	LowQual	F	GT:GQ:DP:AF	1/1:0:3:0.6667
+chr10	21412653	.	AATAT	A,AAT	7.24	PASS	P	GT:GQ:DP:AF	1/2:7:2:1.0000
+chr10	38453842	.	C	CTGTGTGTG	6.97	PASS	P	GT:GQ:DP:AF	0/1:6:2:0.5000
+chr10	38454833	.	G	GGTGT	1.42	LowQual	F	GT:GQ:DP:AF	1/1:1:2:0.5000
+chr10	71310385	.	T	TATC	2.15	PASS	F	GT:GQ:DP:AF	1/1:2:2:1.0000
+chr10	79660872	.	CA	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr10	90260776	.	C	CTG	0.75	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr10	90265154	.	CTGTT	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:1.0000
+chr10	91964009	.	TAATC	T	7.82	PASS	P	GT:GQ:DP:AF	1/1:7:3:1.0000
+chr10	120290294	.	GCTCT	G	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr11	14044937	.	AAACTG	A	0.58	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr11	34620437	.	G	GC	3.03	PASS	F	GT:GQ:DP:AF	1/1:3:2:1.0000
+chr11	60930745	.	G	GCAGTC	8.9	PASS	F	GT:GQ:DP:AF	1/1:8:2:1.0000
+chr11	67657534	.	TGTAA	T	11.18	PASS	F	GT:GQ:DP:AF	1/1:11:2:1.0000
+chr11	67659721	.	C	CTCTA	5.18	PASS	F	GT:GQ:DP:AF	1/1:5:2:0.5000
+chr11	67660796	.	G	GGGT	4.57	PASS	F	GT:GQ:DP:AF	1/1:4:2:1.0000
+chr11	96794836	.	CACATAT	C	9.68	PASS	F	GT:GQ:DP:AF	1/1:9:2:1.0000
+chr11	121115810	.	C	CT	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr11	121118833	.	AT	A	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:1.0000
+chr12	10730978	.	G	GGT	1.55	LowQual	F	GT:GQ:DP:AF	1/1:1:2:1.0000
+chr12	24267873	.	C	CTAAA	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr12	68973666	.	CA	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr12	101811241	.	C	CA	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr12	106219439	.	G	GGTGTGT	3.54	PASS	F	GT:GQ:DP:AF	1/1:3:2:0.5000
+chr12	109438976	.	G	GACAA	3.43	PASS	F	GT:GQ:DP:AF	1/1:3:2:1.0000
+chr12	110687723	.	TCACATCGGCTG	T	12.05	PASS	P	GT:GQ:DP:AF	0/1:12:3:0.3333
+chr13	34238668	.	A	ATCTCACAGATT	11.63	PASS	F	GT:GQ:DP:AF	1/1:11:2:1.0000
+chr13	42117748	.	TTTTG	T	1.97	LowQual	F	GT:GQ:DP:AF	1/1:1:2:1.0000
+chr13	55366980	.	A	AAT	1.63	LowQual	F	GT:GQ:DP:AF	1/1:1:2:0.5000
+chr13	60882757	.	A	AAATTT	5.76	PASS	F	GT:GQ:DP:AF	1/1:5:2:1.0000
+chr13	73104242	.	CAG	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:3:1.0000
+chr13	73106453	.	G	GC	10.97	PASS	F	GT:GQ:DP:AF	1/1:10:3:1.0000
+chr13	73111330	.	C	CA	5.6	PASS	F	GT:GQ:DP:AF	1/1:5:2:1.0000
+chr13	81133454	.	CTT	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:1.0000
+chr13	81668397	.	C	CTGTGTG	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr15	26790341	.	TTG	T	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr15	33557497	.	T	TA	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr15	50973461	.	T	TACAC	4.38	PASS	F	GT:GQ:DP:AF	1/1:4:2:0.5000
+chr15	70910910	.	T	TTATATAA	6.9	PASS	P	GT:GQ:DP:AF	1/1:6:2:0.5000
+chr15	98002635	.	CGTGT	C	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr16	157374	.	T	TG	5.19	PASS	F	GT:GQ:DP:AF	1/1:5:2:1.0000
+chr16	158672	.	T	TTTATTATTA	1.43	LowQual	F	GT:GQ:DP:AF	1/1:1:2:0.5000
+chr17	70778026	.	C	CA	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr18	30313307	.	G	GGTGT	0.56	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr18	37096673	.	C	CTG	11.75	PASS	F	GT:GQ:DP:AF	1/1:11:2:1.0000
+chr18	48003617	.	C	CAT	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr19	10171645	.	AAAAT	A	0	LowQual	F	GT:GQ:DP:AF	0/1:0:2:0.5000
+chr19	18127312	.	CA	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr20	24635286	.	G	GAGGA	7.24	PASS	P	GT:GQ:DP:AF	1/1:7:2:1.0000
+chr20	24638494	.	TA	T	4.93	PASS	F	GT:GQ:DP:AF	1/1:4:2:1.0000
+chr20	52772275	.	CAAAAA	C	0	LowQual	F	GT:GQ:DP:AF	1/1:0:2:0.5000
+chr21	37989831	.	A	AAAG	8.23	PASS	P	GT:GQ:DP:AF	1/1:8:3:1.0000

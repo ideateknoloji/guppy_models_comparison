@@ -1,0 +1,750 @@
+---
+title: "Comparison of Effects of Fast and High Accuracy Models of Guppy Basecalling Software on Single Nucleotide Polymorphism Calling"
+author: "Hamza Umut Karakurt, Hasan Ali Pekcan, Ayşe Kahraman, Bilçağ Akgün"
+date: '2022-08-22'
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+---
+
+This study focuses on "High Accuracy" and "Fast" models of Guppy basecaller. Using 8 low coverage long read sequencing results coming from GIAB Gold Standard Data (HG001) pass/fail ratio, FASTQ quality, true variant discovery and variant quality metrics are compared.
+
+FAST5 files were downloaded from [Nanopore WGS Consortium](https://github.com/nanopore-wgs-consortium/NA12878) using Amazon Web Services (AWS) S3 client.
+
+Each FAST5 folder used as input and basecalling is applied using Guppy **dna_r9.4.1_450bps_hac.cfg** and **dna_r9.4.1_450bps_fast.cfg** as config files with 16 CPU cores. Other parameters are set as default. As default fail and pass folders are created to seperate low and high quality reads from FAST5 files. 
+
+The command that used:
+```{bash , eval = FALSE}
+guppy_basecaller --compress_fastq -i "input_folder" --cpu_threads_per_caller 14 
+--num_callers 1 -c dna_r9.4.1_450bps_hac.cfg
+```
+
+Obtained FASTQ files (from pass folder) merged using *cat* command in Ubuntu 20.04 OS. Quality of each FASTQ file analyzed via [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) and [MultiQC](https://multiqc.info/) tools.
+
+Fastq files aligned to human genome (hg19) using [minimap2](https://github.com/lh3/minimap2) aligner using default parameters. 
+
+The command that used:
+```{bash , eval = FALSE}
+minimap2 --MD -a  "genome_loc" "fastq_loc"
+```
+
+
+Output SAM files directly converted to BAM files using [Samtools](https://academic.oup.com/bioinformatics/article/25/16/2078/204688). BAM files indexed using Samtools as well.
+
+SNPs and Indels are called using [Clair3](https://github.com/HKU-BAL/Clair3) Docker container with default parameters.
+
+VCF files are processed using R/RStudio and compared with [HG001](https://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/release/NA12878_HG001/NISTv4.2.1/GRCh37/) truth vcf file. 
+
+
+Required packages are imported
+
+```{r}
+library(ggplot2)
+library(reshape2)
+library(ggsci)
+library(knitr)
+library(stringr)
+library(data.table)
+library(gridExtra)
+```
+
+# Comparison of Number of Fail and Pass FASTQ Files After Basecalling
+
+```{r}
+fail_pass_results <- read.table("fail_pass/fail_pass_ratio.txt" , sep = "\t" , header = T)
+fail_pass_results$total <- fail_pass_results$Pass+fail_pass_results$Fail
+```
+
+```{r}
+kable(fail_pass_results[,1:5] , 
+      caption = "Pass/Fail Ratios of High Accuracy and Fast Models" , align=rep('c', 5))
+```
+
+
+The number of total FASTQ files obtained from FAST5 files are shown in "total" column. Since there are small differences, the number of output FASTQ files are not statistically different between High Accuracy and Fast models.
+
+The difference is tested using **Paired T-Test**.
+
+First, the differences tested with **Shapiro Wilk Test** to test normality.
+
+```{r}
+shapiro.test(log2(fail_pass_results$total[fail_pass_results$Model.Type == "Fast"]) - log2(fail_pass_results$total[fail_pass_results$Model.Type == "High_Accuracy"]))
+```
+
+The differences are normally distributed (with p-value threshold as 0.01) with p-value as 0.025.
+
+```{r}
+pass_fail_test <- t.test(log2(fail_pass_results$total[fail_pass_results$Model.Type == "Fast"]) , log2(fail_pass_results$total[fail_pass_results$Model.Type == "High_Accuracy"]) , paired = TRUE)
+print(paste("Obtained P-Value is: " , pass_fail_test$p.value))
+```
+
+The number of generated FASTQ files are not significantly different (p-value = 0.44)
+
+
+# Comparison of Pass and Fail Ratio
+
+
+The Pass/Fail ratios are calculated for each model that used for each data set. Ratios are plotted using **ggplot2** and **ggsci** packages.
+
+
+```{r , echo=TRUE , fig.width= 30 , fig.height= 20 , fig.align='center'}
+ggplot(fail_pass_results, aes(fill=Model.Type, y=Pass.Fail.Ratio, x=Dataset, label = round(Pass.Fail.Ratio , digits = 3))) + geom_bar(stat = "identity") + 
+  theme_bw() + geom_text(size = 7, position = position_stack(vjust = 0.5)) + scale_fill_d3() + theme(axis.text.x = element_text(angle = 90, size = 15, vjust = 0.5, hjust=1)) + ggtitle("Plot of Pass/Fail Ratio of Each Dataset") + xlab("Dataset") + ylab("Pass/Fail Ratio")
+```
+
+Boxplot of Pass/Fail Ratio
+
+```{r , echo=TRUE , fig.width= 30 , fig.height= 20 , fig.align='center'}
+ggplot(fail_pass_results, aes(x = Model.Type , y = Pass.Fail.Ratio , fill = Model.Type)) + geom_boxplot(outlier.color = "black" , outlier.shape = 16) + scale_fill_d3()+ ggtitle("Boxplot of Pass/Fail Ratio of Each Dataset") + xlab("Model Type") + ylab("Pass/Fail Ratio") + theme_bw()
+```
+
+Fold Changes of Pass/Fail Ratio
+
+```{r}
+pass_fail_ratio_fcs <- fail_pass_results$Pass.Fail.Ratio[fail_pass_results$Model.Type == "Fast"] / fail_pass_results$Pass.Fail.Ratio[fail_pass_results$Model.Type == "High_Accuracy"]
+
+print(paste("Mean FoldChange of Pass/Fail Ratio is: " , round(mean(pass_fail_ratio_fcs) , digits = 3)))
+```
+Average Fold Change pf Pass/Fail Ratios is 0.918.
+
+Pass/Fail Ratios between High Accuracy and Fast models are also tested using Paired T-Test as well.
+
+First, the differences are with **Shapiro Wilk Test** to test normality.
+
+
+```{r}
+shapiro.test(fail_pass_results$Pass.Fail.Ratio[fail_pass_results$Model.Type == "Fast"] - fail_pass_results$Pass.Fail.Ratio[fail_pass_results$Model.Type == "High_Accuracy"])
+```
+
+
+```{r}
+pass_fail_ratio_test <- t.test(fail_pass_results$Pass.Fail.Ratio[fail_pass_results$Model.Type == "Fast"] , fail_pass_results$Pass.Fail.Ratio[fail_pass_results$Model.Type == "High_Accuracy"] , paired = TRUE)
+print(paste("Obtained P-Value is: " , pass_fail_ratio_test$p.value))
+```
+
+The P/F Ratios between models are significantly different with p-value = 0.011
+
+
+# Read Counts in FASTQ Files in Each Model
+
+```{r}
+read_counts <- read.table("fail_pass/read_counts.txt" , header = T , sep = "\t")
+```
+
+
+Boxplot of High Accuracy and Fast model read counts in FASTQ files
+
+
+```{r , echo=TRUE , fig.width= 30 , fig.height= 20 , fig.align='center'}
+ggplot(read_counts, aes(x = Model , y = Read_Counts , fill = Model)) + geom_boxplot(outlier.color = "black" , outlier.shape = 16) + scale_fill_d3()+ ggtitle("Boxplot of Read Counts") + xlab("Model Type") + ylab("Read Counts") + theme_bw()
+```
+
+
+The total read counts differences are tested using Paired T-Test.
+
+```{r}
+read_counts_test <- t.test(log2(read_counts$Read_Counts[read_counts$Model == "Fast"]) , log2(read_counts$Read_Counts[read_counts$Model == "High_Accuracy"]) , paired = TRUE)
+print(paste("Obtained P-Value is: " , read_counts_test$p.value))
+```
+
+Read counts are not statistically different between models.
+
+
+# Comparison of Average Read Lengths Between FASTQ Outputs of High Accuracy and Fast Models
+
+```{r}
+read_lengths <- read.table("fail_pass/read_lengths.txt" , header = T , sep = "\t")
+```
+
+Boxplot of High Accuracy and Fast Model Average Read Lengths in FASTQ files
+
+```{r , echo=TRUE , fig.width= 30 , fig.height= 20 , fig.align='center'}
+ggplot(read_lengths, aes(x = Model , y = Average_Read_Length , fill = Model)) + geom_boxplot(outlier.color = "black" , outlier.shape = 16) + scale_fill_d3()+ theme_bw() + ggtitle("Boxplot of Read Counts") + xlab("Model Type") + ylab("Read Lengths")
+```
+
+
+The total read counts differences are tested using Paired T-Test.
+
+```{r}
+read_lengths_test <- t.test(log2(read_lengths$Average_Read_Length[read_lengths$Model == "Fast"]) , log2(read_lengths$Average_Read_Length[read_lengths$Model == "High_Accuracy"]) , paired = TRUE)
+print(paste("Obtained P-Value is: " , read_lengths_test$p.value))
+```
+
+
+The average read lengths between Fast and High Accuracy Models are not statistically different with p-value = 0.68.
+
+
+
+# Comparison of Variants
+
+
+VCF files obtained from Clair3 processed using a in-house R function. 
+HG001 truth VCF file is used to compare true and false variants.
+
+
+Truth VCF file is imported to R and an ID created for each variant using **Chromosome, Position, Reference Base and Alternative Base**.
+
+```{r}
+truth_file <- read.table("HG001_with_chr.vcf" , sep = "\t")
+truth_ids <- paste(truth_file$V1,truth_file$V2,truth_file$V4,truth_file$V5,sep = "_")
+```
+
+The folders that contains the SNPs and Indels for each model and data set obtained from Clair3 imported to R. IDs for each variant are created as well.
+
+
+```{r}
+fast_vcfs_snps <- list.files("clair3_vars/snps/fast" , full.names = T)
+hac_vcfs_snps <- list.files("clair3_vars/snps/hac" , full.names = T)
+
+fast_vcfs_indels <- list.files("clair3_vars/indels/fast" , full.names = T)
+hac_vcfs_indels <- list.files("clair3_vars/indels/hac" , full.names = T)
+```
+
+The in-house function **vcf_comparison** takes a vcf file as input, extract variants with "PASS" and filters variants with quality lower than 12.   
+
+```{r}
+vcf_comparison <- function(fast_input , hac_input , dataname) {
+  fast_vcf <- read.table(fast_input , sep = "\t" , header = F)
+  fast_vcf <- fast_vcf[fast_vcf$V7 == "PASS",]
+  fast_vcf <- fast_vcf[as.numeric(fast_vcf$V6) > 12,]
+  hac_vcf <- read.table(hac_input , sep = "\t" , header = F)
+  hac_vcf <- hac_vcf[hac_vcf$V7 == "PASS",]
+  hac_vcf <- hac_vcf[as.numeric(hac_vcf$V6) > 12,]
+  fast_vcf$ID <- paste(fast_vcf$V1,fast_vcf$V2,fast_vcf$V4,fast_vcf$V5,sep = "_")
+  hac_vcf$ID <- paste(hac_vcf$V1,hac_vcf$V2,hac_vcf$V4,hac_vcf$V5,sep = "_")
+  fast_tp <- fast_vcf$ID %in% truth_ids
+  hac_tp <- hac_vcf$ID %in% truth_ids
+  fast_tp_rate <- sum(fast_tp) / length(fast_tp) * 100
+  hac_tp_rate <- sum(hac_tp) / length(hac_tp) * 100
+  tp_rates <- c(sum(fast_tp) / length(fast_tp) * 100 , sum(hac_tp) / length(hac_tp) * 100)
+  number_of_variants <- c(nrow(fast_vcf) , nrow(hac_vcf))
+  number_of_true_variants <- c(sum(fast_tp) , sum(hac_tp))
+  number_of_false_variants <- number_of_variants - number_of_true_variants
+  comparison_results <- data.frame(Number_of_Variants = number_of_variants,
+                                   Number_of_TP_Variants = number_of_true_variants,
+                                   Number_of_FP_Variants = number_of_false_variants,
+                                   TP_Ratios = tp_rates)
+  rownames(comparison_results) <- c(paste(dataname,"_fast" , sep = "") , paste(dataname,"_hac" , sep = ""))
+  comparison_results
+}
+```
+
+```{r}
+sample_names <- list()
+
+for (i in 1:length(fast_vcfs_snps)) {
+  sample_names[i] <- substr(str_split(fast_vcfs_snps[i] , pattern = "/")[[1]][4],1,8)
+}
+```
+
+
+Each VCF is used as input to function and results are stored in seperate files.
+
+
+```{r}
+for (i in 1:length(fast_vcfs_snps)) {
+  assign(paste(sample_names[i],"_comparison_snps",sep = "") , 
+       vcf_comparison(fast_vcfs_snps[i],hac_vcfs_snps[i],sample_names[i]))
+}
+```
+
+
+```{r}
+for (i in 1:length(fast_vcfs_indels)) {
+  assign(paste(sample_names[i],"_comparison_indels",sep = "") , 
+       vcf_comparison(fast_vcfs_indels[i],hac_vcfs_indels[i],sample_names[i]))
+}
+```
+
+
+```{r}
+comparisons_snps <- as.data.frame(rbindlist(mget(ls(pattern = "_comparison_snps"))))
+
+comparisons_indels <- as.data.frame(rbindlist(mget(ls(pattern = "_comparison_indels"))))
+```
+
+
+```{r}
+comparisons_snps$Dataset <- as.character(rep(sample_names , each = 2))
+comparisons_snps$Model <- as.factor(rep(c("Fast" , "High_Accuracy") , 15))
+
+comparisons_indels$Dataset <- as.character(rep(sample_names , each = 2))
+comparisons_indels$Model <- as.factor(rep(c("Fast" , "High_Accuracy") , 15))
+
+snp_results <- comparisons_snps[,c(5,6,1,2,3,4)]
+indel_results <- comparisons_indels[,c(5,6,1,2,3,4)]
+```
+
+```{r , echo = TRUE}
+kable(snp_results , caption = "Variant Calling Results (SNPs)")
+```
+
+
+```{r , echo=TRUE}
+kable(indel_results , caption = "Variant Calling Results (Indels)")
+```
+
+Due to size of sequencing, some data sets produced relatively small amount of variants and did not used in plots for better visualization. The results that used for plotting are stored as **filtered_snps** and **filtered_indels**.
+
+```{r}
+filtered_snps <- as.data.frame(snp_results)
+filtered_snps$Number_of_Variants <- as.integer(filtered_snps$Number_of_Variants)
+filtered_indels <- as.data.frame(indel_results[-c(1,2,5,6,9,10,11,12,13,14,15,16,21,22,25,26,27,28),])
+```
+
+## Comparison of Single Nucleotide Polymorphmisms (SNPs)
+
+
+The Barplot of Number of Total SNPs for Each Data Set and Model
+
+```{r , echo=TRUE , fig.width= 30 , fig.height= 10 , fig.align='center'}
+ggplot(filtered_snps , aes(x = Dataset , y = log2(Number_of_Variants) , fill = Model , label = Number_of_Variants)) + geom_bar(stat = 'identity' , position = position_dodge()) + theme_minimal() + scale_fill_d3() + geom_text(aes(label = round(log2(Number_of_Variants),digits = 3)) , size = 5 , vjust = 0 , position = position_dodge(width = 0.9)) + theme(axis.text.x = element_text(angle = 90, size = 15, vjust = 0.5, hjust=1)) + ggtitle("Plot of Number of SNPs for Each Model and Dataset (Log2 Scaled)") + xlab("Dataset") + ylab("Number of SNPs (Log2)")
+```
+
+Boxplot of Number of Variants
+
+```{r , echo=TRUE , fig.width= 20 , fig.height= 15 , fig.align='center'}
+ggplot(filtered_snps , aes(x = Model , y = log2(Number_of_Variants) , fill = Model)) + geom_boxplot(outlier.color = "black" , outlier.shape = 16) + scale_fill_d3() + geom_dotplot(binaxis='y', stackdir='center',position=position_dodge(1) , binwidth = 0.2) + ggtitle("Boxplot of Number of SNPs for Each Model and Dataset (Log2 Scaled)") + xlab("Model Type") + ylab("Number of SNPs (Log2)")
+```
+
+
+### Statistical Testing on Number of Variants
+
+Fold Change Based Analysis
+
+```{r}
+number_of_snps_fcs <- filtered_snps$Number_of_Variants[filtered_snps$Model == "Fast"] / filtered_snps$Number_of_Variants[filtered_snps$Model == "High_Accuracy"]
+
+tp_ratios_snps_fcs <- filtered_snps$TP_Ratios[filtered_snps$Model == "Fast"] / filtered_snps$TP_Ratios[filtered_snps$Model == "High_Accuracy"]
+
+print(paste("Mean FoldChange of Number of SNPs is: " , round(mean(number_of_snps_fcs) , digits = 3)))
+
+print(paste("Mean FoldChange of True Positive SNP Ratios is: " , round(mean(tp_ratios_snps_fcs) , digits = 3)))
+```
+
+Average Fold Change of SNPs between Fast and High Accuracy Models in the context of *Number of Variants* is 0.475 while in the context of *True Positive Ratios* is 0.97. 
+
+There is a remarkable difference between High Accuracy and Fast models in the context of **Number of Variants**. 
+
+The difference is also tested using Paired T - Test to define the significance of differences. 
+
+First, the differences are with **Shapiro Wilk Test** to test normality.
+
+```{r}
+shapiro.test(log2(filtered_snps$Number_of_Variants[filtered_snps$Model == "Fast"]) - log2(filtered_snps$Number_of_Variants[filtered_snps$Model == "High_Accuracy"]))
+```
+
+The differences distribute normally (p-value threshold 0.01) with p-value = 0.026
+
+```{r}
+number_of_variants_test_wilcox <- t.test(log2(filtered_snps$Number_of_Variants[filtered_snps$Model == "Fast"]) , log2(filtered_snps$Number_of_Variants[filtered_snps$Model == "High_Accuracy"]) ,paired = TRUE)
+
+print(paste("Obtained P-Value is: " , round(number_of_variants_test_wilcox$p.value,digits = 3)))
+```
+
+The Number of Variants are significantly different with p-value = 0. 
+
+### Statistical Testing on True Positive Ratios
+
+Barplot of True Positive Ratios
+
+```{r , echo=TRUE , fig.width= 20 , fig.height= 15 , fig.align='center'}
+ggplot(filtered_snps , aes(x = Dataset , y=TP_Ratios , fill = Model , label = round(TP_Ratios , digits = 2))) + geom_bar(stat = 'identity' , position = position_dodge())+ scale_fill_d3() + geom_text(aes(label = round(TP_Ratios , digits = 2)) , size = 5 , vjust = 0 , position = position_dodge(width = 0.9)) + theme(axis.text.x = element_text(angle = 90, size = 15, vjust = 0.5, hjust=1)) + ggtitle("Plot of True Positive SNP Ratios for Each Model and Dataset") + xlab("Dataset") + ylab("True Positive SNP Ratios")
+```
+
+Boxplot of TP Ratios of SNPs
+
+```{r , echo=TRUE , fig.width= 10 , fig.height= 7.5 , fig.align='center'}
+ggplot(filtered_snps , aes(x = Model , y = TP_Ratios , fill = Model)) + geom_boxplot(outlier.color = "black" , outlier.shape = 16 , outlier.size = 2) + scale_fill_d3() + geom_dotplot(binaxis='y', stackdir='center',position=position_dodge(1) , binwidth = 0.2) + ggtitle("Boxplot of True Positive SNP Ratios for Each Model and Dataset") + xlab("Model Type") + ylab("True Positive SNP Ratios")
+```
+
+The True Positive differences are also tested using Paired T - Test to define the significance of differences. 
+
+First, the differences are with **Shapiro Wilk Test** to test normality.
+
+```{r}
+shapiro.test(filtered_snps$TP_Ratios[filtered_snps$Model == "Fast"] - filtered_snps$TP_Ratios[filtered_snps$Model == "High_Accuracy"])
+```
+The TP Ratio differences are normally distributed with p-value = 0.22
+
+```{r}
+tp_ratios_test <- t.test(filtered_snps$TP_Ratios[filtered_snps$Model == "Fast"] , filtered_snps$TP_Ratios[filtered_snps$Model == "High_Accuracy"] ,paired = TRUE)
+
+print(paste("Obtained P-Value is: " , round(tp_ratios_test$p.value,digits = 3)))
+```
+
+Statistical Testing indicated that True Positive SNP Ratios are not statistically different between High Accuracy and Fast models.
+
+
+## Comparison of Insertions and Deletions
+
+Barplot of Number of Variants of Indels
+
+
+```{r , echo=TRUE , fig.width= 20 , fig.height= 15 , fig.align='center'}
+ggplot(filtered_indels , aes(x = Dataset , Number_of_Variants , fill = Model , label = Number_of_Variants)) + geom_bar(stat = 'identity' , position = position_dodge()) + theme_minimal() + scale_fill_d3() + geom_text(aes(label = Number_of_Variants) , size = 5 , vjust = 0 , position = position_dodge(width = 0.9)) + theme(axis.text.x = element_text(angle = 90, size = 15, vjust = 0.5, hjust=1)) + ggtitle("Plot of Number of Indels for Each Model and Dataset (Log2 Scaled)") + xlab("Dataset") + ylab("Number of Indels")
+```
+
+Boxplot of Number of Variants of Indels
+
+```{r , echo=TRUE}
+ggplot(filtered_indels , aes(x = Model , y = Number_of_Variants , fill = Model)) + geom_boxplot(outlier.color = "black" , outlier.shape = 16) + scale_fill_d3() + geom_dotplot(binaxis='y', stackdir='center',position=position_dodge(1)) + ggtitle("Boxplot of Number of Indels for Each Model and Dataset (Log2 Scaled)") + xlab("Model Type") + ylab("Number of Indels (Log2)")
+```
+
+
+### Statistical Testing on Number of Variants
+
+Fold Change Based Analysis
+
+```{r}
+number_of_indel_fcs <- filtered_indels$Number_of_Variants[filtered_indels$Model == "Fast"] / filtered_indels$Number_of_Variants[filtered_indels$Model == "High_Accuracy"]
+
+tp_ratios_indel_fcs <- filtered_indels$TP_Ratios[filtered_indels$Model == "Fast"] / filtered_indels$TP_Ratios[filtered_indels$Model == "High_Accuracy"]
+
+print(paste("Mean FoldChange of Number of Indels is: " , round(mean(number_of_indel_fcs) , digits = 3)))
+
+print(paste("Mean FoldChange of True Positive Indel Ratios is: " , round(mean(tp_ratios_indel_fcs) , digits = 3)))
+```
+
+Average Fold Change of Indels between Fast and High Accuracy Models in the context of *Number of Variants* is 0.415 while in the context of *True Positive Ratios* is 0.925.
+
+There is a remarkable difference between High Accuracy and Fast models in the context of **Number of Variants**.
+
+The difference is also tested using Paired T - Test to define the significance of differences. 
+
+First, the differences are with **Shapiro Wilk Test** to test normality.
+
+```{r}
+shapiro.test(log2(filtered_indels$Number_of_Variants[filtered_indels$Model == "Fast"]) - log2(filtered_indels$Number_of_Variants[filtered_indels$Model == "High_Accuracy"]))
+```
+
+The differences distribute normally with p-value = 0.69
+
+```{r}
+number_of_variants_test_indels <- t.test(log2(filtered_indels$Number_of_Variants[filtered_indels$Model == "Fast"]) , log2(filtered_indels$Number_of_Variants[filtered_indels$Model == "High_Accuracy"]) ,paired = TRUE)
+
+print(paste("Obtained P-Value is: " , round(number_of_variants_test_indels$p.value,digits = 3)))
+```
+
+The Number of Variants are significantly different with p-value = 0. 
+
+
+### Statistical Testing on True Positive Ratios
+
+Non-filtered Indels file is used for TP Ratio Plots
+
+Barplot of True Positive Rates of Indel Calls
+
+```{r , echo=TRUE , fig.width= 20 , fig.height= 15 , fig.align='center'}
+ggplot(filtered_indels , aes(x = Dataset , y=TP_Ratios , fill = Model , label = round(TP_Ratios , digits = 2))) + geom_bar(stat = 'identity' , position = position_dodge())+ scale_fill_d3() + geom_text(aes(label = round(TP_Ratios , digits = 2)) , size = 5 , vjust = 0 , position = position_dodge(width = 0.9)) + theme(axis.text.x = element_text(angle = 90, size = 15, vjust = 0.5, hjust=1)) + ggtitle("Plot of True Positive Indel Ratios for Each Model and Dataset") + xlab("Dataset") + ylab("True Positive Indel Ratios")
+```
+
+```{r , echo=TRUE , fig.width= 10 , fig.height= 7.5 , fig.align='center'}
+ggplot(filtered_indels , aes(x = Model , y = TP_Ratios , fill = Model)) + geom_boxplot(outlier.color = "black" , outlier.shape = 16 , outlier.size = 2) + scale_fill_d3() + geom_dotplot(binaxis='y', stackdir='center',position=position_dodge(1) , binwidth = 0.2) + ggtitle("Boxplot of True Positive SNP Ratios for Each Model and Dataset") + xlab("Model Type") + ylab("True Positive SNP Ratios")
+```
+
+
+The True Positive differences are also tested using Paired T - Test to define the significance of differences. 
+
+First, the differences are with **Shapiro Wilk Test** to test normality.
+
+```{r}
+shapiro.test(filtered_indels$TP_Ratios[filtered_indels$Model == "Fast"] - filtered_indels$TP_Ratios[filtered_indels$Model == "High_Accuracy"])
+```
+The TP Ratio differences are normally distributed with p-value = 0.63
+
+```{r}
+tp_ratios_test <- t.test(filtered_indels$TP_Ratios[filtered_indels$Model == "Fast"] , filtered_indels$TP_Ratios[filtered_indels$Model == "High_Accuracy"] ,paired = TRUE)
+
+print(paste("Obtained P-Value is: " , round(tp_ratios_test$p.value,digits = 3)))
+```
+
+Statistical Testing indicated that True Positive Indel Ratios are statistically different between High Accuracy and Fast models.
+
+## Comparison of TP Ratio of Common Variants between Fast and High Accuracy Models
+
+```{r}
+common_comparison <- function(fast_input , hac_input , dataname) {
+  fast_vcf <- read.table(fast_input , sep = "\t" , header = F)
+  fast_vcf <- fast_vcf[fast_vcf$V7 == "PASS",]
+  fast_vcf <- fast_vcf[as.numeric(fast_vcf$V6) > 12,]
+  hac_vcf <- read.table(hac_input , sep = "\t" , header = F)
+  hac_vcf <- hac_vcf[hac_vcf$V7 == "PASS",]
+  hac_vcf <- hac_vcf[as.numeric(hac_vcf$V6) > 12,]
+  fast_vcf$ID <- paste(fast_vcf$V1,fast_vcf$V2,fast_vcf$V4,fast_vcf$V5,sep = "_")
+  hac_vcf$ID <- paste(hac_vcf$V1,hac_vcf$V2,hac_vcf$V4,hac_vcf$V5,sep = "_")
+  common_variants <- intersect(fast_vcf$ID , hac_vcf$ID)
+  number_of_common_variants <- length(common_variants)
+  common_variants_tp <- sum(common_variants %in% truth_ids) / length(common_variants %in% truth_ids) * 100
+  only_in_fast <- setdiff(fast_vcf$ID , hac_vcf$ID)
+  only_in_hac <- setdiff(hac_vcf$ID , fast_vcf$ID)
+  only_in_fast_tp <- sum(only_in_fast %in% truth_ids) / length(only_in_fast) * 100
+  only_in_hac_tp <- sum(only_in_hac %in% truth_ids) / length(only_in_hac) * 100
+  common_variants_results <- data.frame(Number_of_Common_Variants = number_of_common_variants,
+                                   Common_Variants_TP = common_variants_tp,
+                                   Only_In_Fast = length(only_in_fast),
+                                   Only_In_High_Accuray = length(only_in_hac),
+                                   Only_In_Fast_TP = only_in_fast_tp,
+                                   Only_In_High_Accuracy_TP = only_in_hac_tp)
+  rownames(common_variants_results) <- dataname
+  common_variants_results
+}
+```
+
+```{r}
+for (i in 1:length(fast_vcfs_snps)) {
+  assign(paste(sample_names[i],"_common_snps",sep = "") , 
+       common_comparison(fast_vcfs_snps[i],hac_vcfs_snps[i],sample_names[i]))
+}
+```
+
+
+```{r}
+for (i in 1:length(fast_vcfs_indels)) {
+  assign(paste(sample_names[i],"_common_indels",sep = "") , 
+       common_comparison(fast_vcfs_indels[i],hac_vcfs_indels[i],sample_names[i]))
+}
+```
+
+```{r}
+common_snps <- as.data.frame(rbindlist(mget(ls(pattern = "_common_snps"))))
+
+common_indels <- as.data.frame(rbindlist(mget(ls(pattern = "_common_indels"))))
+```
+
+```{r}
+common_snps$Dataset <- as.character(rep(sample_names))
+common_indels$Dataset <- as.character(rep(sample_names))
+```
+
+```{r}
+common_snps <- as.data.frame(common_snps)
+common_indels <- as.data.frame(common_indels[-c(1,3,5,6,7,8,11,13,14),])
+```
+
+```{r , echo = TRUE}
+kable(common_snps , caption = "Variant Calling Results (SNPs)")
+```
+
+
+```{r , echo=TRUE}
+rownames(common_indels) <- NULL
+kable(common_indels , caption = "Variant Calling Results (Indels)")
+```
+```{r}
+standalone_variants <- as.data.frame(rbind(cbind(common_snps$Only_In_Fast_TP , common_snps$Only_In_High_Accuracy_TP) , cbind(common_indels$Only_In_Fast_TP , common_indels$Only_In_High_Accuracy_TP)))
+
+common_variants_test <- t.test(standalone_variants$V1 , standalone_variants$V2 
+                               ,paired = TRUE)
+
+print(paste("Obtained P-Value is: " , round(tp_ratios_test$p.value,digits = 3)))
+```
+
+
+
+## Comparison of Single Nucleotide Polymorphmisms (SNPs)
+
+
+The Barplot of Number of Total SNPs for Each Data Set and Model
+
+```{r , echo=TRUE , fig.width= 30 , fig.height= 10 , fig.align='center'}
+ggplot(common_snps , aes(x = Dataset , y = Common_Variants_TP , fill = "red" , label = Common_Variants_TP)) + geom_bar(stat = 'identity' , position = position_dodge()) + theme_minimal() + scale_fill_d3() + geom_text(aes(label = round(Common_Variants_TP,digits = 3)) , size = 5 , vjust = 0 , position = position_dodge(width = 0.9)) + theme(axis.text.x = element_text(angle = 90, size = 15, vjust = 0.5, hjust=1)) + ggtitle("Plot of TP Ratio of Common SNPs") + xlab("Dataset") + ylab("True Positive Ratio")
+```
+### Comparison of Indels
+
+```{r , echo=TRUE , fig.width= 30 , fig.height= 10 , fig.align='center'}
+ggplot(common_indels , aes(x = Dataset , y = Common_Variants_TP , fill = "red" , label = Common_Variants_TP)) + geom_bar(stat = 'identity' , position = position_dodge()) + theme_minimal() + scale_fill_d3() + geom_text(aes(label = round(Common_Variants_TP,digits = 3)) , size = 5 , vjust = 0 , position = position_dodge(width = 0.9)) + theme(axis.text.x = element_text(angle = 90, size = 15, vjust = 0.5, hjust=1)) + ggtitle("Plot of TP Ratio of Common InDels") + xlab("Dataset") + ylab("True Positive Ratio")
+```
+
+## Comparison of Qualities of Common Variants Between Models
+
+```{r}
+fast_snps_tsvs <- list.files("tsvs/snps/fast" , full.names = T)
+
+hac_snps_tsvs <- list.files("tsvs/snps/hac" , full.names = T)
+
+fast_indels_tsvs <- list.files("tsvs/indels/fast" , full.names = T)
+
+hac_indels_tsvs <- list.files("tsvs/indels/hac" , full.names = T)
+
+```
+
+```{r}
+quality_comparison <- function(fast_input , hac_input , dataname) {
+  fast_tsv <- read.table(fast_input , sep = "\t" , header = T)
+  hac_tsv <- read.table(hac_input , sep = "\t" , header = T)
+  fast_tsv$IDs <- paste(fast_tsv$CHROM,fast_tsv$POS,fast_tsv$REF,fast_tsv$ALT , sep = "_")
+  hac_tsv$IDs <- paste(hac_tsv$CHROM,hac_tsv$POS,hac_tsv$REF,hac_tsv$ALT , sep = "_")
+  inters <- intersect(fast_tsv$IDs , hac_tsv$IDs)
+  fast_tsv <- fast_tsv[fast_tsv$IDs %in% inters,]
+  hac_tsv <- fast_tsv[hac_tsv$IDs %in% inters,]
+  a <- cbind(fast_tsv$IDs , fast_tsv$QUAL, rep("fast" , nrow(fast_tsv)))
+  b <- cbind(hac_tsv$IDs , hac_tsv$QUAL  , rep("hac" , nrow(hac_tsv)))
+  data_table <- as.data.frame(rbind(a , b))
+  colnames(data_table) <- c("Variant_ID" , "QUAL", "Model")
+  data_table$QUAL <- as.numeric(data_table$QUAL)
+  ggplot(data_table, aes(x=QUAL, colour=Model , fill = Model))+ geom_density(alpha=0.5) + ggtitle(dataname)
+}
+```
+
+```{r}
+sample_names <- list()
+
+for (i in 1:length(fast_snps_tsvs)) {
+  sample_names[i] <- substr(str_split(fast_snps_tsvs[i] , pattern = "/")[[1]][4],1,8)
+}
+```
+
+```{r , echo=TRUE , fig.width= 30 , fig.height= 10 , fig.align='center'}
+for (i in 1:length(fast_snps_tsvs)) {
+      quality_comparison(fast_snps_tsvs[i],hac_snps_tsvs[i],sample_names[i])
+}
+```
+
+```{r , echo=TRUE , fig.width= 30 , fig.height= 10 , fig.align='center'}
+for (i in 1:length(fast_indels_tsvs)) {
+      quality_comparison(fast_indels_tsvs[i],hac_indels_tsvs[i],sample_names[i])
+}
+```
+
+### Statistical Testing on Qualities
+
+```{r}
+qualities_t_test <- function(fast_input , hac_input) {
+  fast_tsv <- read.table(fast_input , sep = "\t" , header = T)
+  hac_tsv <- read.table(hac_input , sep = "\t" , header = T)
+  fast_tsv$IDs <- paste(fast_tsv$CHROM,fast_tsv$POS,fast_tsv$REF,fast_tsv$ALT , sep = "_")
+  hac_tsv$IDs <- paste(hac_tsv$CHROM,hac_tsv$POS,hac_tsv$REF,hac_tsv$ALT , sep = "_")
+  inters <- intersect(fast_tsv$IDs , hac_tsv$IDs)
+  fast_tsv <- fast_tsv[fast_tsv$IDs %in% inters,]
+  hac_tsv <- fast_tsv[hac_tsv$IDs %in% inters,]
+  a <- as.numeric(fast_tsv$QUAL)
+  b <- as.numeric(hac_tsv$QUAL)
+  a <- log2(a)
+  b <- log2(b)
+  tp_qual_test <- t.test(a , b , paired = TRUE)
+  p_value_qual <- round(tp_qual_test$p.value,digits = 3)
+  p_value_qual
+}
+```
+
+```{r}
+p_values_qual_snps <- c()
+
+for (i in 1:length(fast_snps_tsvs)) {
+      p_values_qual_snps[i] <- qualities_t_test(fast_snps_tsvs[i],hac_snps_tsvs[i])
+}
+
+names(p_values_qual_snps) <- sample_names
+
+p_values_qual_indels <- c()
+
+for (i in 1:length(fast_indels_tsvs)) {
+      try(p_values_qual_indels[i] <- qualities_t_test(fast_indels_tsvs[i],hac_indels_tsvs[i]),
+          silent = TRUE)
+}
+
+names(p_values_qual_indels)  <- sample_names
+
+```
+
+```{r}
+print(p_values_qual_snps)
+
+print(p_values_qual_indels)
+```
+
+
+## Comparison of False Negative SNPs and Indels
+
+```{r}
+fast_vcfs_snps <- list.files("clair3_vars/snps/fast" , full.names = T)
+hac_vcfs_snps <- list.files("clair3_vars/snps/hac" , full.names = T)
+
+fast_vcfs_indels <- list.files("clair3_vars/indels/fast" , full.names = T)
+hac_vcfs_indels <- list.files("clair3_vars/indels/hac" , full.names = T)
+
+
+truth_vcf_snps <- list.files("false_negative/snps"
+                             , full.names = T)
+
+truth_vcf_indels <- list.files("false_negative/indels"
+                             , full.names = T)
+
+
+fn_comparison <- function(fast_input , hac_input , dataname , truth_vcf) {
+  fast_vcf <- read.table(fast_input , sep = "\t" , header = F)
+  fast_vcf <- fast_vcf[fast_vcf$V7 == "PASS",]
+  fast_vcf <- fast_vcf[as.numeric(fast_vcf$V6) > 12,]
+  hac_vcf <- read.table(hac_input , sep = "\t" , header = F)
+  hac_vcf <- hac_vcf[hac_vcf$V7 == "PASS",]
+  hac_vcf <- hac_vcf[as.numeric(hac_vcf$V6) > 12,]
+  fast_vcf$ID <- paste(fast_vcf$V1,fast_vcf$V2,fast_vcf$V4,fast_vcf$V5,sep = "_")
+  hac_vcf$ID <- paste(hac_vcf$V1,hac_vcf$V2,hac_vcf$V4,hac_vcf$V5,sep = "_")
+  truth_file <- read.table(truth_vcf , sep = "\t")
+  truth_ids <- paste(truth_file$V1,truth_file$V2,truth_file$V4,truth_file$V5,sep = "_")
+  fast_fn <- sum(!(truth_ids %in% fast_vcf$ID))
+  hac_fn <- sum(!(truth_ids %in% hac_vcf$ID))
+  fn <- data.frame(Number_of_Variants_In_Truth = nrow(truth_file),
+                   Fast_False_Negative = fast_fn, High_Accuracy_False_Negative = hac_fn)
+  rownames(fn) <- dataname
+  fn
+}
+
+sample_names <- list()
+
+for (i in 1:length(fast_vcfs_snps)) {
+  sample_names[i] <- substr(str_split(fast_vcfs_snps[i] , pattern = "/")[[1]][4],1,8)
+}
+
+
+for (i in 1:length(fast_vcfs_snps)) {
+  assign(paste(sample_names[i],"_fn_snps",sep = "") , 
+         fn_comparison(fast_vcfs_snps[i],hac_vcfs_snps[i],sample_names[i],truth_vcf_snps[i]))
+}
+
+results <- ls(pattern = "_fn_snps")
+
+false_negative_snps <- rbind(get(results[1]) , get(results[2]))
+
+for (i in 3:15) {
+  false_negative_snps <- rbind(false_negative_snps , get(results[i]))
+}
+
+
+for (i in 1:length(fast_vcfs_snps)) {
+  assign(paste(sample_names[i],"_fn_indels",sep = "") , 
+         fn_comparison(fast_vcfs_indels[i],hac_vcfs_indels[i],sample_names[i],truth_vcf_indels[i]))
+}
+
+results <- ls(pattern = "_fn_indels")
+
+false_negative_indels <- rbind(get(results[1]) , get(results[2]))
+
+for (i in 3:15) {
+  false_negative_indels <- rbind(false_negative_indels , get(results[i]))
+}
+
+false_negative_indels <- false_negative_indels[!(false_negative_indels$Number_of_Variants_In_Truth == false_negative_indels$Fast_False_Negative),]
+
+p_val_fn_snps <- t.test(false_negative_snps$Fast_False_Negative , 
+                        false_negative_snps$High_Accuracy_False_Negative, paired = TRUE)
+
+p_val_fn_indels <- t.test(false_negative_indels$Fast_False_Negative , 
+                        false_negative_indels$High_Accuracy_False_Negative, paired = TRUE)
+```
+
+```{r}
+print(p_val_fn_snps)
+
+print(p_val_fn_indels)
+```
+
+
+# Conclusion
+
+Due to small sample size, the statistical test results may not be generalized but when the results investigated in detail, it can be seen the *High Accuracy* and *Fast* models are different in the context of *Pass/Fail Ratio* and *Number of Variants*. However, total read counts of FASTQ files and *True Positive Rates* are not significantly different for Single Nucleotide Polymorphisms while *True Positive Rates* for Insertions/Deletions are significantly different.
+
+The difference of number of variants may arise due to different *Pass/Fail Ratios*. Due to that using fast or high accuracy models does not effect the performance of alignment and variant calling steps, it affects directly the size of FASTQ reads.
+
